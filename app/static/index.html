@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SlabTakeoff | Precast Estimator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { ink: '#101827', panel: '#172033', line: '#29364e', signal: '#36d399', blue: '#5aa9ff' } } } };
+    </script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="min-h-screen bg-ink text-slate-100">
+    <header class="border-b border-line bg-[#121c2d]">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center bg-signal text-[#0c1b1c] font-black">ST</div>
+          <div><h1 class="text-base font-semibold tracking-wide">SlabTakeoff</h1><p class="text-xs text-slate-400">PRECAST SUSPENDED SLAB ESTIMATOR</p></div>
+        </div>
+        <span class="hidden sm:inline-flex items-center gap-2 text-xs text-slate-400"><i class="h-2 w-2 rounded-full bg-signal"></i> Takeoff engine online</span>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-5 py-7">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <div><p class="text-xs font-semibold tracking-widest text-signal">STRUCTURAL MATERIAL SCHEDULE</p><h2 class="mt-1 text-2xl font-semibold">Room takeoff</h2></div>
+        <button id="resetButton" title="Restore standard module values" class="border border-line px-3 py-2 text-sm text-slate-300 hover:border-blue">Reset defaults</button>
+      </div>
+      <div class="grid gap-6 lg:grid-cols-[340px_1fr]">
+        <section class="border border-line bg-panel p-5">
+          <form id="estimateForm" class="space-y-5" novalidate>
+            <div class="flex items-center justify-between"><h3 class="font-semibold">Geometry & modules</h3><span class="text-xs text-slate-400">metres</span></div>
+            <div class="grid grid-cols-2 gap-3">
+              <label>Room length<input id="length_m" name="length_m" type="number" min="0.01" step="0.01" value="5" required /></label>
+              <label>Room width<input id="width_m" name="width_m" type="number" min="0.01" step="0.01" value="4" required /></label>
+            </div>
+            <label>Beam c/c spacing<input id="beam_spacing_m" name="beam_spacing_m" type="number" min="0.01" step="0.01" value="1.06" required /><small>1.06 m standard for 1.0 m panels</small></label>
+            <label>Slab panel coverage<input id="panel_run_m" name="panel_run_m" type="number" min="0.01" step="0.01" value="1" required /><small>1.0 m standard slab panel</small></label>
+            <label>Wall panel length<input id="wall_panel_length_m" name="wall_panel_length_m" type="number" min="0.01" step="0.01" value="3" required /><small>3.0 m standard wall panel</small></label>
+            <div class="grid grid-cols-2 gap-3">
+              <label>Bearing / side<input id="bearing_depth_m" name="bearing_depth_m" type="number" min="0" step="0.01" value="0.1" required /></label>
+              <label>Fiber bags / m2<input id="fiber_dosage_bags_m2" name="fiber_dosage_bags_m2" type="number" min="0" step="0.001" value="0.084" required /></label>
+            </div>
+            <label>Room reference<input id="room_name" name="room_name" type="text" value="Room 01" maxlength="160" /></label>
+            <p id="formError" class="hidden text-sm text-red-300" role="alert"></p>
+            <button class="w-full bg-signal px-4 py-3 font-semibold text-[#082023] hover:bg-[#63e5b7]" type="submit">Calculate & save estimate</button>
+          </form>
+          <div class="mt-6 border-t border-line pt-5">
+            <p class="text-xs font-semibold tracking-widest text-signal">LOCAL AI DRAWING TAKEOFF</p>
+            <h3 class="mt-1 font-semibold">Read a drawing</h3>
+            <p class="mt-1 text-xs leading-5 text-slate-400">Upload a dimensioned architectural or structural PDF. Its sheets are read locally by Ollama, then checked by the takeoff engine.</p>
+            <form id="drawingForm" class="mt-3 space-y-3">
+              <input id="drawingFile" accept="application/pdf,.pdf" type="file" required />
+              <button id="drawingButton" class="w-full border border-blue px-4 py-2 text-sm font-semibold text-blue hover:bg-[#203b61]" type="submit">Analyse drawing</button>
+            </form>
+            <p id="drawingStatus" class="mt-3 text-xs text-slate-400" role="status"></p>
+            <div id="drawingResults" class="hidden mt-3 text-xs"></div>
+          </div>
+        </section>
+
+        <section class="min-w-0">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <article class="metric"><p>T-beams</p><strong id="beamCount">-</strong><span>boundary closure included</span></article>
+            <article class="metric"><p>Beam length</p><strong id="beamLm">-</strong><span>linear metres</span></article>
+            <article class="metric"><p>1 m slab panels</p><strong id="panelOrder">-</strong><span id="panelBuffer">including buffer</span></article>
+            <article class="metric"><p>3 m wall panels</p><strong id="wallPanelOrder">-</strong><span id="wallPanelBuffer">including buffer</span></article>
+            <article class="metric"><p>Fiber bags</p><strong id="fiberBags">-</strong><span id="grossArea">gross screed area</span></article>
+          </div>
+          <div class="mt-5 grid gap-5 xl:grid-cols-[1fr_290px]">
+            <section class="border border-line bg-panel p-5">
+              <div class="flex items-center justify-between"><div><h3 class="font-semibold">Slab layout</h3><p id="orientation" class="mt-1 text-sm text-slate-400">Awaiting dimensions</p></div><span id="estimateId" class="text-xs text-signal"></span></div>
+              <div class="mt-4 min-h-[320px] bg-[#111a29] p-3"><svg id="slabSvg" class="h-[320px] w-full" viewBox="0 0 640 360" role="img" aria-label="Slab beam layout schematic"></svg></div>
+              <div class="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4 text-sm sm:grid-cols-4"><div><span class="label">Span</span><b id="span">-</b></div><div><span class="label">Distribution</span><b id="distribution">-</b></div><div><span class="label">Bays</span><b id="bays">-</b></div><div><span class="label">Theoretical panels</span><b id="theoreticalPanels">-</b></div></div>
+            </section>
+            <section class="border border-line bg-panel p-5 flex flex-col">
+              <div><p class="text-xs font-semibold tracking-widest text-signal">AI TAKEOFF ASSISTANT</p><h3 class="mt-1 font-semibold">Ask the calculation logic</h3></div>
+              <div id="chatLog" class="chat-log mt-4 flex-1" aria-live="polite"><div class="assistant-msg">Ask why a boundary beam is added, or check an alternative room size.</div></div>
+              <form id="chatForm" class="mt-4 flex gap-2"><input id="chatInput" class="min-w-0 flex-1" placeholder="e.g. Why add 1 extra beam?" maxlength="2000" /><button title="Send question" class="grid h-10 w-10 place-items-center bg-blue text-white hover:bg-[#7cbbff]" type="submit" aria-label="Send question">&#8593;</button></form>
+            </section>
+          </div>
+          <p class="mt-4 text-xs text-slate-500">Method: short-span T-beams; bays = ceil(distribution / c/c); beams = bays + 1. Slab panels cover each bay; wall panels cover the room perimeter. A 10% allowance is included. Confirm openings, shared walls and structural design before ordering.</p>
+        </section>
+      </div>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

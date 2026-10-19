@@ -1,0 +1,27 @@
+* { box-sizing: border-box; }
+body { letter-spacing: 0; }
+label { display: block; color: #cbd5e1; font-size: .78rem; font-weight: 600; }
+input { width: 100%; margin-top: .42rem; border: 1px solid #334155; background: #101827; color: #f8fafc; padding: .62rem .7rem; outline: none; border-radius: 0; }
+input:focus { border-color: #5aa9ff; box-shadow: 0 0 0 2px rgba(90,169,255,.18); }
+small { display: block; margin-top: .32rem; font-weight: 400; color: #64748b; }
+.metric { min-height: 132px; border: 1px solid #29364e; background: #172033; padding: 1rem; }
+.metric p, .metric span { display:block; font-size: .75rem; color: #94a3b8; }
+.metric strong { display:block; margin: .45rem 0; font-size: 1.75rem; line-height: 1; color: #f8fafc; }
+.label { display:block; font-size:.72rem; color:#94a3b8; }
+.label + b { display:block; margin-top:.18rem; color:#e2e8f0; }
+.chat-log { min-height: 205px; max-height: 280px; overflow-y:auto; display:flex; flex-direction:column; gap:.65rem; font-size:.85rem; line-height:1.45; }
+.assistant-msg, .user-msg { padding:.65rem .75rem; max-width:95%; }
+.assistant-msg { align-self:flex-start; background:#111a29; border-left:2px solid #36d399; color:#cbd5e1; }
+.user-msg { align-self:flex-end; background:#263957; color:#f8fafc; }
+.beam { stroke:#5aa9ff; stroke-width:5; }
+.panel-line { stroke:#4a5e7d; stroke-width:1; }
+.bearing { fill:#334155; }
+.dimension { fill:#94a3b8; font-size:13px; font-family:ui-sans-serif,system-ui; }
+.beam-label { fill:#b9d9ff; font-size:11px; font-family:ui-sans-serif,system-ui; }
+button:disabled { cursor:not-allowed; opacity:.6; }
+.drawing-warning { border-left:2px solid #fbbf24; background:#25221a; padding:.55rem .65rem; color:#fde68a; line-height:1.4; }
+.drawing-room { display:block; width:100%; margin-top:.45rem; border:1px solid #334155; background:#111a29; padding:.6rem; color:#cbd5e1; text-align:left; }
+.drawing-room:hover { border-color:#5aa9ff; }
+.drawing-room span, .drawing-room b, .drawing-room small { display:block; }
+.drawing-room b { color:#63e5b7; margin:.2rem 0; }
+.drawing-room small { color:#94a3b8; }
