@@ -15,6 +15,8 @@ async def analyse(upload: UploadFile = File(..., description="Architectural or s
     contents = await upload.read(MAX_DRAWING_BYTES + 1)
     if not contents or len(contents) > MAX_DRAWING_BYTES:
         raise HTTPException(413, "Drawing must be between 1 byte and 15 MB.")
+    if b"%PDF-" not in contents[:1024]:
+        raise HTTPException(415, "Upload a valid PDF drawing.")
     try:
         return await analyse_drawing(contents, upload.filename or "drawing.pdf")
     except DrawingReadError as exc:

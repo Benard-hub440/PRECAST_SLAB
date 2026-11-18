@@ -2,5 +2,11 @@ __pycache__/
 *.py[cod]
 .venv/
 precast_estimator.db
-.env
+.pytest_cache/
+.coverage
+.env*
+!.env.example
+*.sqlite3
+AGENT.md
+skills.md
 

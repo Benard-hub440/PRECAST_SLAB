@@ -19,28 +19,39 @@ The SQLite database is created at `precast_estimator.db` by default. Set
 `DATABASE_URL` for another SQLAlchemy-compatible database (for example,
 PostgreSQL) in deployment.
 
-## Local AI drawing takeoff
+## Deployment
 
-The drawing feature never sends drawings to a hosted AI provider. It uses a
-vision-capable [Ollama](https://ollama.com/) model running on the same machine.
-After installing Ollama, pull a vision model and start the application:
+Copy `.env.example` to `.env` and set `ALLOWED_HOSTS` to the application's
+public host name. Keep `ALLOWED_ORIGINS` empty when the dashboard and API share
+one domain; otherwise list only the trusted dashboard origins. Use a managed
+database rather than the local SQLite file for a multi-instance deployment.
+
+## Multimodal drawing takeoff
+
+The drawing feature accepts a multimodal model through either local
+[Ollama](https://ollama.com/) (the default) or an OpenAI-compatible
+chat-completions endpoint. For the local, private setup, pull your selected
+vision model and place its name in your untracked `.env` file:
 
 ```bash
-ollama pull qwen2.5vl:7b
+ollama pull <your-multimodal-model>
 uvicorn app.main:app --reload
 ```
 
 Upload a dimensioned PDF of an architectural or structural plan in **Read a
-drawing**. The server renders up to eight PDF sheets in memory for the local
-vision model; the uploaded drawing is not saved. The model returns explicitly labelled room dimensions;
+drawing**. The server renders up to eight PDF sheets in memory for the
+configured vision model; the uploaded drawing is not saved. The model returns explicitly labelled room dimensions;
 the existing, deterministic calculator then produces a T-beam, 1 m slab-panel,
 and 3 m wall-panel estimate for each room and project totals. Wall panels are
 based on each extracted room perimeter, so openings and shared walls must be
 checked against the issued drawings before ordering. The screen shows the
 extracted dimensions, confidence, and source-label evidence.
 
-Set `OLLAMA_URL` to use a different local Ollama address and
-`OLLAMA_VISION_MODEL` to select another locally installed vision model.
+Set `VISION_PROVIDER=ollama`, `VISION_API_URL`, and `VISION_MODEL` for any
+locally installed Ollama vision model. For a hosted or self-hosted
+OpenAI-compatible endpoint, set `VISION_PROVIDER=openai_compatible`, point
+`VISION_API_URL` at its chat-completions endpoint, and set `VISION_API_KEY`
+and `VISION_MODEL`. See `.env.example`.
 
 ## Layout
 

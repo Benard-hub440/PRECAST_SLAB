@@ -2,6 +2,7 @@ const form = document.querySelector('#estimateForm');
 const chatForm = document.querySelector('#chatForm');
 const drawingForm = document.querySelector('#drawingForm');
 const fields = ['length_m', 'width_m', 'beam_spacing_m', 'panel_run_m', 'wall_panel_length_m', 'bearing_depth_m', 'fiber_dosage_bags_m2'];
+const positiveFields = ['length_m', 'width_m', 'beam_spacing_m', 'panel_run_m', 'wall_panel_length_m'];
 let currentInput = null;
 
 function number(id) { return Number(document.getElementById(id).value); }
@@ -12,6 +13,7 @@ function inputPayload(save = true) {
   return payload;
 }
 function fmt(value, digits = 0) { return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits }); }
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]); }
 function showError(message = '') { const el = document.querySelector('#formError'); el.textContent = message; el.classList.toggle('hidden', !message); }
 
 function drawSlab(result) {
@@ -49,7 +51,7 @@ function render(result) {
 }
 async function calculate(save = true) {
   const payload = inputPayload(save);
-  if (fields.some((id) => !Number.isFinite(payload[id]) || payload[id] < 0) || payload.length_m <= 0 || payload.width_m <= 0) { showError('Enter valid positive room and module dimensions.'); return null; }
+  if (fields.some((id) => !Number.isFinite(payload[id]) || payload[id] < 0) || positiveFields.some((id) => payload[id] <= 0)) { showError('Enter valid positive room and module dimensions.'); return null; }
   showError();
   const response = await fetch('/api/v1/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   if (!response.ok) { const error = await response.json(); throw new Error(error.detail?.[0]?.msg || 'Calculation could not be completed.'); }
@@ -78,7 +80,7 @@ drawingForm.addEventListener('submit', async (event) => {
     if (!response.ok) throw new Error(data.detail || 'Drawing analysis failed.');
     status.textContent = `${data.rooms.length} room(s): ${fmt(data.total_t_beams)} T-beams (${fmt(data.total_beam_linear_meters, 2)} m), ${fmt(data.total_panels_to_order)} 1 m slab panels and ${fmt(data.total_wall_panels_to_order)} 3 m wall panels. Review dimensions before ordering.`;
     results.innerHTML = data.rooms.length
-      ? `<div class="drawing-warning">AI interpretation — totals include a 10% allowance. Confirm openings and shared walls against the issued drawing.</div>${data.rooms.map(({ room, estimate }) => `<button class="drawing-room" data-length="${room.length_m}" data-width="${room.width_m}" data-name="${room.name}"><span>${room.name}: ${fmt(room.length_m, 2)} × ${fmt(room.width_m, 2)} m (${Math.round(room.confidence * 100)}% confidence)</span><b>${fmt(estimate.beam_count)} T-beams · ${fmt(estimate.panels_to_order)} slab · ${fmt(estimate.wall_panels_to_order)} wall</b><small>${room.evidence || 'No evidence supplied'} · Click to load</small></button>`).join('')}`
+      ? `<div class="drawing-warning">AI interpretation — totals include a 10% allowance. Confirm openings and shared walls against the issued drawing.</div>${data.rooms.map(({ room, estimate }) => `<button class="drawing-room" data-length="${room.length_m}" data-width="${room.width_m}" data-name="${escapeHtml(room.name)}"><span>${escapeHtml(room.name)}: ${fmt(room.length_m, 2)} × ${fmt(room.width_m, 2)} m (${Math.round(room.confidence * 100)}% confidence)</span><b>${fmt(estimate.beam_count)} T-beams · ${fmt(estimate.panels_to_order)} slab · ${fmt(estimate.wall_panels_to_order)} wall</b><small>${escapeHtml(room.evidence || 'No evidence supplied')} · Click to load</small></button>`).join('')}`
       : '<div class="drawing-warning">No explicitly dimensioned rooms were found. Upload a clearer export or enter dimensions manually.</div>';
     results.classList.remove('hidden');
     results.querySelectorAll('.drawing-room').forEach((item) => item.addEventListener('click', () => {
